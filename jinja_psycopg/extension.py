@@ -4,6 +4,13 @@ from jinja2.lexer import TokenStream, Token
 
 
 class PsycopgExtension(Extension):
+    """Wraps all expressions with the psycopg filter,
+    so
+    `{{ variable | filter1 | filter2 }}`
+    becomes
+    `{{ (variable | filter1 | filter2) | psycopg }}`
+    """
+
     def filter_stream(self, stream: TokenStream) -> Iterable[Token]:
         while not stream.eos:
             token = next(stream)

@@ -11,8 +11,11 @@ format_args = ContextVar("format_args")
 
 def psycopg_filter(value: Any):
     if isinstance(value, SQL):
+        # No need to pass SQL to psycopg's formatter,
+        # since it's included as is
         return value.as_string(None)
 
+    # Save the value in thread-local context (if exists)
     args_list = format_args.get()
     if args_list is not None:
         args_list.append(value)
