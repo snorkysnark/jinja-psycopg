@@ -1,12 +1,6 @@
-from typing import Any, Iterable, Optional, Union
-from contextvars import ContextVar
-
-from jinja2 import Environment, Template
+from typing import Iterable
 from jinja2.ext import Extension
 from jinja2.lexer import TokenStream, Token
-from psycopg.sql import SQL, Composed
-
-format_args = ContextVar("format_args")
 
 
 class PsycopgExtension(Extension):
@@ -33,40 +27,3 @@ class PsycopgExtension(Extension):
                 yield from var_expr
             else:
                 yield token
-
-
-def psycopg_filter(value: Any):
-    if isinstance(value, SQL):
-        return value.as_string(None)
-
-    args_list = format_args.get()
-    if args_list is not None:
-        args_list.append(value)
-
-    return "{}"
-
-
-class JinjaPsycopg:
-    def __init__(self, env: Optional[Environment] = None) -> None:
-        self.env = env or Environment()
-        self._prepare_environment()
-
-    def _prepare_environment(self):
-        self.env.add_extension(PsycopgExtension)
-        self.env.filters["psycopg"] = psycopg_filter
-
-    def make_template(self, source: str) -> Template:
-        return self.env.from_string(source)
-
-    def render(
-        self, template: Union[str, Template], params: dict[str, Any]
-    ) -> Composed:
-        if isinstance(template, str):
-            template = self.env.from_string(template)
-
-        format_args.set([])
-        try:
-            sql = SQL(template.render(params))
-            return sql.format(*format_args.get())
-        finally:
-            format_args.set(None)

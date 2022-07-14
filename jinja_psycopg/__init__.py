@@ -1,1 +1,1 @@
-from .extension import JinjaPsycopg
+from .renderer import JinjaPsycopg
