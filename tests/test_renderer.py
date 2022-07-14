@@ -45,22 +45,41 @@ class CustomRenderer(JinjaPsycopg):
     def _prepare_environment(self):
         super()._prepare_environment()
 
-        def uppercase(string: str):
-            return string.upper()
+        def appendA(string: str):
+            return string + "A"
 
-        self.env.globals["uppercase"] = uppercase
+        def appendB(string: str):
+            return string + "B"
+
+        self.env.globals["appendA"] = appendA
+        self.env.filters["appendB"] = appendB
 
 
 def test_function(conn: Connection):
-    query = "VALUES ( {{ uppercase('bar') }} )"
-    expected = "VALUES ( 'BAR' )"
+    query = "VALUES ( {{ appendA('bar') }} )"
+    expected = "VALUES ( 'barA' )"
 
     assert CustomRenderer().render(query).as_string(conn) == expected
 
 
 def test_function_order(conn: Connection):
-    query = "VALUES ( {{ foo }}, {{ uppercase('bar') }} )"
-    expected = "VALUES ( 'foo', 'BAR' )"
+    query = "VALUES ( {{ foo }}, {{ appendA('bar') }} )"
+    expected = "VALUES ( 'foo', 'barA' )"
+    params = {"foo": "foo"}
+
+    assert CustomRenderer().render(query, params).as_string(conn) == expected
+
+
+def test_filter(conn: Connection):
+    query = "VALUES ( {{ 'bar' | appendB }} )"
+    expected = "VALUES ( 'barB' )"
+
+    assert CustomRenderer().render(query).as_string(conn) == expected
+
+
+def test_filter_order(conn: Connection):
+    query = "VALUES ( {{ foo }}, {{ 'bar' | appendB }} )"
+    expected = "VALUES ( 'foo', 'barB' )"
     params = {"foo": "foo"}
 
     assert CustomRenderer().render(query, params).as_string(conn) == expected
