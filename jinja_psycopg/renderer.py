@@ -1,26 +1,26 @@
-from typing import Any, Optional, Union
+from typing import Any, Optional
 from contextvars import ContextVar
 
-from jinja2 import Environment, Template
+from jinja2 import Environment
 from psycopg.sql import SQL, Composed
 
 from .extension import PsycopgExtension
 
-format_args = ContextVar("format_args")
+context = ContextVar[Optional[dict[str, Any]]]("format_args")
 
 
-def psycopg_filter(value: Any):
+def psycopg_filter(value: Any, key: str):
     if isinstance(value, SQL):
         # No need to pass SQL to psycopg's formatter,
         # since it's included as is
         return value.as_string(None)
 
     # Save the value in thread-local context (if exists)
-    args_list = format_args.get()
-    if args_list is not None:
-        args_list.append(value)
+    format_args = context.get()
+    if format_args is not None:
+        format_args[key] = value
 
-    return "{}"
+    return f"{{{key}}}"
 
 
 class JinjaPsycopg:
@@ -32,18 +32,13 @@ class JinjaPsycopg:
         self.env.add_extension(PsycopgExtension)
         self.env.filters["psycopg"] = psycopg_filter
 
-    def make_template(self, source: str) -> Template:
-        return self.env.from_string(source)
-
-    def render(
-        self, template: Union[str, Template], params: dict[str, Any]
-    ) -> Composed:
-        if isinstance(template, str):
-            template = self.env.from_string(template)
-
-        format_args.set([])
+    def render(self, source: str, params: dict[str, Any]) -> Composed:
+        context.set({})
         try:
+            template = self.env.from_string(source)
             sql = SQL(template.render(params))
-            return sql.format(*format_args.get())
+            format_args: dict[str, Any] = context.get()  # type:ignore
+
+            return sql.format(**format_args)
         finally:
-            format_args.set(None)
+            context.set(None)
