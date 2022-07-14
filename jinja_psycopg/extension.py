@@ -39,7 +39,10 @@ def psycopg_filter(value: Any):
     if isinstance(value, SQL):
         return value.as_string(None)
 
-    format_args.get().append(value)
+    args_list = format_args.get()
+    if args_list is not None:
+        args_list.append(value)
+
     return "{}"
 
 
