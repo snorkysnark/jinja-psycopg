@@ -1,0 +1,6 @@
+*.pyc
+__pypackages__/
+.pdm.toml
+
+*.ipynb
+.ipynb_checkpoints/
