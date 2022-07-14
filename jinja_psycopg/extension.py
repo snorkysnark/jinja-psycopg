@@ -9,6 +9,7 @@ class PsycopgExtension(Extension):
     `{{ variable | filter1 | filter2 }}`
     becomes
     `{{ (variable | filter1 | filter2) | psycopg }}`
+    Inspired by [jinjasql](https://github.com/sripathikrishnan/jinjasql)
     """
 
     def filter_stream(self, stream: TokenStream) -> Iterable[Token]:
