@@ -32,7 +32,7 @@ class JinjaPsycopg:
         self.env.add_extension(PsycopgExtension)
         self.env.filters["psycopg"] = psycopg_filter
 
-    def render(self, source: str, params: dict[str, Any]) -> Composed:
+    def render(self, source: str, params: dict[str, Any] = {}) -> Composed:
         context.set({})
         try:
             template = self.env.from_string(source)
