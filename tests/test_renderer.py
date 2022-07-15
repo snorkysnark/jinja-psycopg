@@ -90,7 +90,7 @@ def test_manual_psycopg(conn: Connection):
     expected = 'SELECT * FROM "jsons"'
     params = {"table": sql.Identifier("jsons")}
 
-    assert CustomRenderer().render(query, params).as_string(conn) == expected
+    assert JinjaPsycopg().render(query, params).as_string(conn) == expected
 
 
 def test_partial_psycopg(conn: Connection):
@@ -98,4 +98,4 @@ def test_partial_psycopg(conn: Connection):
     expected = 'SELECT * FROM "jsons"'
     params = {"table": sql.Identifier("jsons")}
 
-    assert CustomRenderer().render(query, params).as_string(conn) == expected
+    assert JinjaPsycopg().render(query, params).as_string(conn) == expected
