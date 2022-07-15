@@ -1,12 +1,12 @@
 from typing import Any, Optional
-from contextvars import ContextVar
 
 from jinja2 import Environment
 from psycopg.sql import SQL, Composed
 
 from .extension import PsycopgExtension
+from .context import ContextDict
 
-context = ContextVar[Optional[dict[str, Any]]]("format_args")
+CONTEXT = ContextDict("format_args")
 
 
 def psycopg_filter(value: Any, key: str):
@@ -16,10 +16,7 @@ def psycopg_filter(value: Any, key: str):
         return value.as_string(None)
 
     # Save the value in thread-local context (if exists)
-    format_args = context.get()
-    if format_args is not None:
-        format_args[key] = value
-
+    CONTEXT.write_safe(key, value)
     return f"{{{key}}}"
 
 
@@ -33,12 +30,9 @@ class JinjaPsycopg:
         self.env.filters["psycopg"] = psycopg_filter
 
     def render(self, source: str, params: dict[str, Any] = {}) -> Composed:
-        context.set({})
-        try:
+        recorder = CONTEXT.recorder()
+        with recorder:
             template = self.env.from_string(source)
             sql = SQL(template.render(params))
-            format_args: dict[str, Any] = context.get()  # type:ignore
 
-            return sql.format(**format_args)
-        finally:
-            context.set(None)
+        return sql.format(**recorder.unwrap())
