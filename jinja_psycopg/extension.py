@@ -3,6 +3,17 @@ from jinja2.ext import Extension
 from jinja2.lexer import TokenStream, Token
 
 
+def ends_with_tagged_psycopg_filter(tokens: list[Token]):
+    # Check if the last tokens are psycopg(<tag>)
+    return (
+        len(tokens) >= 3
+        and tokens[-1].test("rparen")
+        and tokens[-2].test("string")
+        and tokens[-3].test("lparen")
+        and tokens[-4].test("name:psycopg")
+    )
+
+
 class PsycopgExtension(Extension):
     """Wraps all expressions with the psycopg filter,
     so
@@ -30,15 +41,16 @@ class PsycopgExtension(Extension):
                 last_token = var_expr[-1]
                 lineno = last_token.lineno
 
-                if not last_token.test("name") or last_token.value != "psycopg":
-                    var_expr.insert(1, Token(lineno, "lparen", "("))
-                    var_expr.append(Token(lineno, "rparen", ")"))
-                    var_expr.append(Token(lineno, "pipe", "|"))
-                    var_expr.append(Token(lineno, "name", "psycopg"))
+                if not ends_with_tagged_psycopg_filter(var_expr):
+                    if not last_token.test("name:psycopg"):
+                        var_expr.insert(1, Token(lineno, "lparen", "("))
+                        var_expr.append(Token(lineno, "rparen", ")"))
+                        var_expr.append(Token(lineno, "pipe", "|"))
+                        var_expr.append(Token(lineno, "name", "psycopg"))
 
-                    var_expr.append(Token(lineno, "lparen", "("))
                     # Jinja processes static strings like {{ 'str' }}
                     # before the other arguments, so we can't rely on order of function calls
+                    var_expr.append(Token(lineno, "lparen", "("))
                     var_expr.append(Token(lineno, "string", f"token#{token_id}"))
                     var_expr.append(Token(lineno, "rparen", ")"))
 

@@ -83,3 +83,19 @@ def test_filter_order(conn: Connection):
     params = {"foo": "foo"}
 
     assert CustomRenderer().render(query, params).as_string(conn) == expected
+
+
+def test_manual_psycopg(conn: Connection):
+    query = "SELECT * FROM {{ table | psycopg('table') }}"
+    expected = 'SELECT * FROM "jsons"'
+    params = {"table": sql.Identifier("jsons")}
+
+    assert CustomRenderer().render(query, params).as_string(conn) == expected
+
+
+def test_partial_psycopg(conn: Connection):
+    query = "SELECT * FROM {{ table | psycopg }}"
+    expected = 'SELECT * FROM "jsons"'
+    params = {"table": sql.Identifier("jsons")}
+
+    assert CustomRenderer().render(query, params).as_string(conn) == expected
