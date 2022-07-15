@@ -1,3 +1,4 @@
+from textwrap import dedent
 import pytest
 import psycopg
 from psycopg import Connection, sql
@@ -97,5 +98,45 @@ def test_partial_psycopg(conn: Connection):
     query = "SELECT * FROM {{ table | psycopg }}"
     expected = 'SELECT * FROM "jsons"'
     params = {"table": sql.Identifier("jsons")}
+
+    assert JinjaPsycopg().render(query, params).as_string(conn) == expected
+
+
+@pytest.mark.parametrize(
+    "flag,expected",
+    [
+        (False, "SELECT * FROM sources"),
+        (True, "SELECT * FROM sources WHERE id = 5"),
+    ],
+)
+def test_if(conn: Connection, flag: bool, expected: str):
+    query = "SELECT * FROM sources{% if flag %} WHERE id = {{ id }}{% endif %}"
+    params = {"flag": flag, "id": 5}
+
+    assert JinjaPsycopg().render(query, params).as_string(conn) == expected
+
+
+def test_for(conn: Connection):
+    query = dedent(
+        """\
+        {% for column in columns -%}
+        ADD COLUMN {{ column }} TEXT{% if not loop.last %},{% endif %}
+        {% endfor %}\
+        """
+    )
+    expected = dedent(
+        """\
+        ADD COLUMN "id" TEXT,
+        ADD COLUMN "source" TEXT,
+        ADD COLUMN "html" TEXT\
+        """
+    )
+    params = {
+        "columns": [
+            sql.Identifier("id"),
+            sql.Identifier("source"),
+            sql.Identifier("html"),
+        ]
+    }
 
     assert JinjaPsycopg().render(query, params).as_string(conn) == expected
