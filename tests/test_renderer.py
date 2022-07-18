@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from textwrap import dedent
 import pytest
 import psycopg
@@ -197,3 +198,22 @@ def test_sql_filter(conn: Connection):
     expected = "SELECT * FROM foo"
 
     assert JinjaPsycopg().render(query).as_string(conn) == expected
+
+
+@dataclass
+class Table:
+    schema: str
+    name: str
+
+    def __sql__(self):
+        return sql.SQL("{}.{}").format(
+            sql.Identifier(self.schema), sql.Identifier(self.name)
+        )
+
+
+def test_into_sql(conn: Connection):
+    query = "SELECT * FROM {{ table }}"
+    expected = 'SELECT * FROM "public"."items"'
+    params = {"table": Table("public", "items")}
+
+    assert JinjaPsycopg().render(query, params).as_string(conn) == expected

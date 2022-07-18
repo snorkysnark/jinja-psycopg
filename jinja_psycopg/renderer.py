@@ -6,7 +6,7 @@ from psycopg.sql import SQL, Composed
 
 from .extension import PsycopgExtension
 from .context import FormatArgsContext
-from .sql import sql_filter
+from .sql import IntoSql, sql_filter
 
 CONTEXT = FormatArgsContext("format_args")
 
@@ -14,6 +14,9 @@ CONTEXT = FormatArgsContext("format_args")
 def psycopg_filter(value: Any):
     """Jinja filter that saves the value inside a dictionary in ContextVar
     and returns a psycopg format placeholder such as `{key}`"""
+    if isinstance(value, IntoSql):
+        value = value.__sql__()
+
     if isinstance(value, SQL):
         # No need to pass SQL to psycopg's formatter,
         # since it's included as is
@@ -74,6 +77,7 @@ class SqlTemplateModule:
 
 class JinjaPsycopg:
     """Wrapper over jinja2.Environment that generates `SqlTemplate`s"""
+
     def __init__(self, env: Optional[Environment] = None) -> None:
         self._env = env or Environment()
         self._prepare_environment()
