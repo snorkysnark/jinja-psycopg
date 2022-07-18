@@ -1,6 +1,7 @@
-from typing import Any, Optional
+from dataclasses import dataclass
+from typing import Any, Optional, Union
 
-from jinja2 import Environment
+from jinja2 import Environment, Template
 from psycopg.sql import SQL, Composed
 
 from .extension import PsycopgExtension
@@ -20,6 +21,20 @@ def psycopg_filter(value: Any):
     return f"{{{key}}}"
 
 
+@dataclass
+class SqlTemplate:
+    template: Template
+    static_args: dict[str, Any]
+
+    def render(self, *args, **kwargs) -> Composed:
+        recorder = CONTEXT.recorder("dynamic")
+        with recorder:
+            sql = SQL(self.template.render(*args, **kwargs))
+        dynamic_args = recorder.unwrap()
+
+        return sql.format(**self.static_args, **dynamic_args)
+
+
 class JinjaPsycopg:
     def __init__(self, env: Optional[Environment] = None) -> None:
         self.env = env or Environment()
@@ -29,15 +44,17 @@ class JinjaPsycopg:
         self.env.add_extension(PsycopgExtension)
         self.env.filters["psycopg"] = psycopg_filter
 
-    def render(self, source: str, params: dict[str, Any] = {}) -> Composed:
-        static_recorder = CONTEXT.recorder("static")
-        with static_recorder:
+    def from_string(self, source: str) -> SqlTemplate:
+        recorder = CONTEXT.recorder("static")
+        with recorder:
             template = self.env.from_string(source)
-        static_args = static_recorder.unwrap()
 
-        dynamic_recorder = CONTEXT.recorder("dynamic")
-        with dynamic_recorder:
-            sql = SQL(template.render(params))
-        dynamic_args = dynamic_recorder.unwrap()
+        return SqlTemplate(template, recorder.unwrap())
 
-        return sql.format(**static_args, **dynamic_args)
+    def render(
+        self, template: Union[str, SqlTemplate], params: dict[str, Any] = {}
+    ) -> Composed:
+        if isinstance(template, str):
+            template = self.from_string(template)
+
+        return template.render(params)
