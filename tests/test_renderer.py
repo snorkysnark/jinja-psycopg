@@ -52,8 +52,8 @@ class CustomRenderer(JinjaPsycopg):
         def appendB(string: str):
             return string + "B"
 
-        self.env.globals["appendA"] = appendA
-        self.env.filters["appendB"] = appendB
+        self._env.globals["appendA"] = appendA
+        self._env.filters["appendB"] = appendB
 
 
 def test_function(conn: Connection):
