@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Any, Mapping, Optional, Union
 
 from jinja2 import Environment, Template
@@ -22,10 +21,10 @@ def psycopg_filter(value: Any):
     return f"{{{key}}}"
 
 
-@dataclass
 class SqlTemplate:
-    _template: Template
-    _static_args: dict[str, Any]
+    def __init__(self, template: Template, static_args: dict[str, Any]) -> None:
+        self._template = template
+        self._static_args = static_args
 
     def render(self, *args, **kwargs) -> Composed:
         recorder = CONTEXT.recorder("dynamic")
@@ -49,10 +48,10 @@ class SqlTemplate:
         return SqlTemplateModule(module, {**self._static_args, **dynamic_args})
 
 
-@dataclass
 class SqlTemplateModule:
-    _module: TemplateModule
-    _args: dict[str, Any]
+    def __init__(self, module: TemplateModule, args: dict[str, Any]) -> None:
+        self._module = module
+        self._args = args
 
     def render(self):
         return SQL(str(self._module)).format(**self._args)
