@@ -6,7 +6,7 @@ from psycopg.sql import SQL, Composed
 
 from .extension import PsycopgExtension
 from .context import FormatArgsContext
-from .sql import IntoSql, sql_filter
+from .sql import IntoSql, sql_filter, sql_join_filter
 
 CONTEXT = FormatArgsContext("format_args")
 
@@ -86,6 +86,7 @@ class JinjaPsycopg:
         self._env.add_extension(PsycopgExtension)
         self._env.filters["psycopg"] = psycopg_filter
         self._env.filters["sql"] = sql_filter
+        self._env.filters["sqljoin"] = sql_join_filter
 
     def from_string(self, source: str) -> SqlTemplate:
         # Jinja2 processes its blocks in two iterations:

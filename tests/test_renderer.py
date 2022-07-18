@@ -217,3 +217,39 @@ def test_into_sql(conn: Connection):
     params = {"table": Table("public", "items")}
 
     assert JinjaPsycopg().render(query, params).as_string(conn) == expected
+
+
+def test_join(conn: Connection):
+    query = "{{ values | sqljoin(',\n') }}"
+    expected = dedent(
+        """\
+        "foo",
+        "sources"."bar\""""
+    )
+    params = {"values": [sql.Identifier("foo"), Table("sources", "bar")]}
+
+    assert JinjaPsycopg().render(query, params).as_string(conn) == expected
+
+
+@dataclass
+class Column:
+    name: str
+    type: str
+
+    @property
+    def add_column(self):
+        return sql.SQL("ADD COLUMN {} {}").format(
+            sql.Identifier(self.name), sql.SQL(self.type)
+        )
+
+
+def test_join_attribute(conn: Connection):
+    query = "{{ columns | sqljoin(',\n', attribute='add_column') }}"
+    expected = dedent(
+        """\
+        ADD COLUMN "id" SERIAL PRIMARY KEY,
+        ADD COLUMN "name" TEXT"""
+    )
+    params = {"columns": [Column("id", "SERIAL PRIMARY KEY"), Column("name", "TEXT")]}
+
+    assert JinjaPsycopg().render(query, params).as_string(conn) == expected
