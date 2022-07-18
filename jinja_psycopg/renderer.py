@@ -11,22 +11,27 @@ CONTEXT = FormatArgsContext("format_args")
 
 
 def psycopg_filter(value: Any):
+    """Jinja filter that saves the value inside a dictionary in ContextVar
+    and returns a psycopg format placeholder such as `{key}`"""
     if isinstance(value, SQL):
         # No need to pass SQL to psycopg's formatter,
         # since it's included as is
         return value.as_string(None)
 
-    # Save the value in thread-local context (if exists)
     key = CONTEXT.save_value(value)
     return f"{{{key}}}"
 
 
 class SqlTemplate:
+    """Wrapper for jinja2.Template that stores static format arguments
+    such as `{{ 'text' }}`"""
+
     def __init__(self, template: Template, static_args: dict[str, Any]) -> None:
         self._template = template
         self._static_args = static_args
 
     def render(self, *args, **kwargs) -> Composed:
+        """Same as jinja2.Template.render, but returns a psycopg.sql.Composed object"""
         recorder = CONTEXT.recorder("dynamic")
         with recorder:
             sql = SQL(self._template.render(*args, **kwargs))
@@ -40,6 +45,7 @@ class SqlTemplate:
         shared: bool = False,
         locals: Optional[Mapping[str, Any]] = None,
     ):
+        """Same as jinja2.Template.make_module, but returns a wrapper that remembers all the format arguments"""
         recorder = CONTEXT.recorder("dynamic")
         with recorder:
             module = self._template.make_module(vars, shared, locals)
@@ -49,11 +55,15 @@ class SqlTemplate:
 
 
 class SqlTemplateModule:
+    """Wrapper over jinja2.environment.TemplateModule that stores all the format arguments
+    for use in SQL.format"""
+
     def __init__(self, module: TemplateModule, args: dict[str, Any]) -> None:
         self._module = module
         self._args = args
 
     def render(self):
+        """Returns a formatted SQL statement"""
         return SQL(str(self._module)).format(**self._args)
 
     @property
@@ -62,6 +72,7 @@ class SqlTemplateModule:
 
 
 class JinjaPsycopg:
+    """Wrapper over jinja2.Environment that generates `SqlTemplate`s"""
     def __init__(self, env: Optional[Environment] = None) -> None:
         self._env = env or Environment()
         self._prepare_environment()
@@ -71,6 +82,9 @@ class JinjaPsycopg:
         self._env.filters["psycopg"] = psycopg_filter
 
     def from_string(self, source: str) -> SqlTemplate:
+        # Jinja2 processes its blocks in two iterations:
+        # static values like {{ 'text' }} are processed during from_string,
+        # and dynamic ones during Template.render or make_module
         recorder = CONTEXT.recorder("static")
         with recorder:
             template = self._env.from_string(source)
