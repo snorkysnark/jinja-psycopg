@@ -5,9 +5,9 @@ from jinja2 import Environment, Template
 from psycopg.sql import SQL, Composed
 
 from .extension import PsycopgExtension
-from .context import ContextWriter
+from .context import FormatArgsContext
 
-CONTEXT = ContextWriter("format_args")
+CONTEXT = FormatArgsContext("format_args")
 
 
 def psycopg_filter(value: Any):

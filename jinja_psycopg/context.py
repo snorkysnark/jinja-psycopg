@@ -4,7 +4,7 @@ from typing import Optional, Any
 
 
 @dataclass
-class ContextDict:
+class FormatArgs:
     prefix: str
     dictionary: dict[str, Any] = field(default_factory=dict)
     num_values: int = 0
@@ -17,9 +17,9 @@ class ContextDict:
         return key
 
 
-class ContextWriter:
+class FormatArgsContext:
     def __init__(self, name: str) -> None:
-        self._context_var = ContextVar[Optional[ContextDict]](name, default=None)
+        self._context_var = ContextVar[Optional[FormatArgs]](name, default=None)
 
     def save_value(self, value: Any) -> str:
         context = self._context_var.get()
@@ -31,19 +31,19 @@ class ContextWriter:
         return context.save_value(value)
 
     def recorder(self, prefix: str):
-        return ContextDictRecorder(self._context_var, prefix)
+        return FormatArgsRecorder(self._context_var, prefix)
 
 
-class ContextDictRecorder:
+class FormatArgsRecorder:
     def __init__(
-        self, context_var: ContextVar[Optional[ContextDict]], prefix: str
+        self, context_var: ContextVar[Optional[FormatArgs]], prefix: str
     ) -> None:
         self._context_var = context_var
         self._prefix = prefix
         self._recorded = None
 
     def __enter__(self):
-        self._token = self._context_var.set(ContextDict(self._prefix))
+        self._token = self._context_var.set(FormatArgs(self._prefix))
 
     def __exit__(self, type, value, traceback):
         context = self._context_var.get()
