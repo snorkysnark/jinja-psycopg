@@ -190,3 +190,10 @@ def test_module_static(conn: Connection):
 
     assert rendered == expected
     assert sql_module._module.val == 1  # type:ignore
+
+
+def test_sql_filter(conn: Connection):
+    query = "SELECT * FROM {{ 'foo' | sql }}"
+    expected = "SELECT * FROM foo"
+
+    assert JinjaPsycopg().render(query).as_string(conn) == expected
