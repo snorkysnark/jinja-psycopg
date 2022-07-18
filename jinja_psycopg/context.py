@@ -1,30 +1,56 @@
 from contextvars import ContextVar
+from dataclasses import dataclass, field
 from typing import Optional, Any
 
 
+@dataclass
 class ContextDict:
+    prefix: str
+    dictionary: dict[str, Any] = field(default_factory=dict)
+    num_values: int = 0
+
+    def save_value(self, value: Any) -> str:
+        key = f"{self.prefix}#{self.num_values}"
+        self.dictionary[key] = value
+
+        self.num_values += 1
+        return key
+
+
+class ContextWriter:
     def __init__(self, name: str) -> None:
-        self._context_var = ContextVar[Optional[dict[str, Any]]](name, default=None)
+        self._context_var = ContextVar[Optional[ContextDict]](name, default=None)
 
-    def write_safe(self, key: str, value: str):
-        dictionary = self._context_var.get()
-        if dictionary is not None:
-            dictionary[key] = value
+    def save_value(self, value: Any) -> str:
+        context = self._context_var.get()
+        if context is None:
+            raise RuntimeError(
+                "Called ContextWriter.save_value, but no context was found"
+            )
 
-    def recorder(self):
-        return ContextDictRecorder(self._context_var)
+        return context.save_value(value)
+
+    def recorder(self, prefix: str):
+        return ContextDictRecorder(self._context_var, prefix)
 
 
 class ContextDictRecorder:
-    def __init__(self, context_var: ContextVar[Optional[dict[str, Any]]]) -> None:
+    def __init__(
+        self, context_var: ContextVar[Optional[ContextDict]], prefix: str
+    ) -> None:
         self._context_var = context_var
+        self._prefix = prefix
         self._recorded = None
 
     def __enter__(self):
-        self._token = self._context_var.set({})
+        self._token = self._context_var.set(ContextDict(self._prefix))
 
     def __exit__(self, type, value, traceback):
-        self._recorded = self._context_var.get()
+        context = self._context_var.get()
+        if context is None:
+            raise RuntimeError("Finished recording, but ContextVar was empty")
+
+        self._recorded = context.dictionary
         self._context_var.reset(self._token)
 
     def unwrap(self) -> dict[str, Any]:

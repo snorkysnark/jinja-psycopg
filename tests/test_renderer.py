@@ -87,14 +87,6 @@ def test_filter_order(conn: Connection):
 
 
 def test_manual_psycopg(conn: Connection):
-    query = "SELECT * FROM {{ table | psycopg('table') }}"
-    expected = 'SELECT * FROM "jsons"'
-    params = {"table": sql.Identifier("jsons")}
-
-    assert JinjaPsycopg().render(query, params).as_string(conn) == expected
-
-
-def test_partial_psycopg(conn: Connection):
     query = "SELECT * FROM {{ table | psycopg }}"
     expected = 'SELECT * FROM "jsons"'
     params = {"table": sql.Identifier("jsons")}
@@ -120,8 +112,8 @@ def test_for(conn: Connection):
     query = dedent(
         """\
         {% for column in columns -%}
-        ADD COLUMN {{ column }} TEXT{% if not loop.last %},{% endif %}
-        {% endfor %}\
+        ADD COLUMN {{ column }} TEXT{% if not loop.last %},
+        {% endif %}{% endfor %}\
         """
     )
     expected = dedent(
@@ -136,6 +128,32 @@ def test_for(conn: Connection):
             sql.Identifier("id"),
             sql.Identifier("source"),
             sql.Identifier("html"),
+        ]
+    }
+
+    assert JinjaPsycopg().render(query, params).as_string(conn) == expected
+
+
+def test_for_static(conn: Connection):
+    query = dedent(
+        """\
+        {% for ident in idents -%}
+        {{ 'text' }} {{ ident }}{% if not loop.last %},
+        {% endif %}{% endfor %}\
+        """
+    )
+    expected = dedent(
+        """\
+        'text' "foo",
+        'text' "bar",
+        'text' "fluff"\
+        """
+    )
+    params = {
+        "idents": [
+            sql.Identifier("foo"),
+            sql.Identifier("bar"),
+            sql.Identifier("fluff"),
         ]
     }
 
