@@ -158,3 +158,35 @@ def test_for_static(conn: Connection):
     }
 
     assert JinjaPsycopg().render(query, params).as_string(conn) == expected
+
+
+def test_module(conn: Connection):
+    query = dedent(
+        """\
+        {% set val = 1 -%}
+        SELECT * FROM {{ table }}"""
+    )
+    expected = 'SELECT * FROM "sources"'
+    params = {"table": sql.Identifier("sources")}
+
+    sql_module = JinjaPsycopg().from_string(query).make_module(params)
+    rendered = sql_module.render().as_string(conn)
+
+    assert rendered == expected
+    assert sql_module._module.val == 1  # type:ignore
+
+
+def test_module_static(conn: Connection):
+    query = dedent(
+        """\
+        {% set val = 1 -%}
+        {{ 'text' }} {{ table }}"""
+    )
+    expected = "'text' \"sources\""
+    params = {"table": sql.Identifier("sources")}
+
+    sql_module = JinjaPsycopg().from_string(query).make_module(params)
+    rendered = sql_module.render().as_string(conn)
+
+    assert rendered == expected
+    assert sql_module._module.val == 1  # type:ignore
