@@ -64,17 +64,17 @@ class SqlTemplateModule:
 
 class JinjaPsycopg:
     def __init__(self, env: Optional[Environment] = None) -> None:
-        self.env = env or Environment()
+        self._env = env or Environment()
         self._prepare_environment()
 
     def _prepare_environment(self):
-        self.env.add_extension(PsycopgExtension)
-        self.env.filters["psycopg"] = psycopg_filter
+        self._env.add_extension(PsycopgExtension)
+        self._env.filters["psycopg"] = psycopg_filter
 
     def from_string(self, source: str) -> SqlTemplate:
         recorder = CONTEXT.recorder("static")
         with recorder:
-            template = self.env.from_string(source)
+            template = self._env.from_string(source)
 
         return SqlTemplate(template, recorder.unwrap())
 
