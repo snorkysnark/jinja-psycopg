@@ -86,7 +86,7 @@ sqlmodule = renderer.from_string(
     {% set config = { 'option': True } %}
     select field from {{ table }}
     """
-).make_module(table=Identifier("foo")
+).make_module({ "table": Identifier("foo") })
 
 assert getattr(sqlmodule.module, "config")['option'] == True
 
