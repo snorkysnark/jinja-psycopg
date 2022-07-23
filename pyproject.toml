@@ -3,7 +3,7 @@ name = "jinja-psycopg"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "francisthebasilisk", email = "snorkysnark@gmail.com"},
+    {name = "snorkysnark", email = "snorkysnark@gmail.com"},
 ]
 dependencies = [
     "jinja2>=3.1.2",
