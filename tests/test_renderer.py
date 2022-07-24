@@ -170,11 +170,11 @@ def test_module(conn: Connection):
     expected = 'SELECT * FROM "sources"'
     params = {"table": sql.Identifier("sources")}
 
-    sql_module = JinjaPsycopg().from_string(query).make_module(params)
-    rendered = sql_module.render().as_string(conn)
+    module = JinjaPsycopg().from_string(query).make_module(params)
+    rendered = module.render().as_string(conn)
 
     assert rendered == expected
-    assert sql_module._module.val == 1  # type:ignore
+    assert getattr(module.inner, "val") == 1
 
 
 def test_module_static(conn: Connection):

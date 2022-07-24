@@ -71,7 +71,7 @@ class SqlTemplateModule:
         return SQL(str(self._module)).format(**self._args)
 
     @property
-    def module(self):
+    def inner(self):
         return self._module
 
 
