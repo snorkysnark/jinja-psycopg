@@ -9,6 +9,7 @@ from .context import FormatArgsContext
 from .sql import IntoSql, sql_filter, sql_join_filter
 
 CONTEXT = FormatArgsContext("format_args")
+_NO_VALUE = object()
 
 
 def psycopg_filter(value: Any):
@@ -73,6 +74,13 @@ class SqlTemplateModule:
     @property
     def inner(self):
         return self._module
+
+    def getattr(self, name: str, default: Any = _NO_VALUE):
+        """Get attribute of the inner module"""
+        if default is _NO_VALUE:
+            return getattr(self._module, name)
+        else:
+            return getattr(self._module, name, default)
 
 
 class JinjaPsycopg:

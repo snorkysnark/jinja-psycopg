@@ -177,6 +177,28 @@ def test_module(conn: Connection):
     assert getattr(module.inner, "val") == 1
 
 
+def test_module_getattr():
+    query = "{% set val = 1 %}"
+
+    module = JinjaPsycopg().from_string(query).make_module()
+    assert module.getattr("val") == 1
+
+
+def test_module_default():
+    query = "{% set val = 1 %}"
+
+    module = JinjaPsycopg().from_string(query).make_module()
+    assert module.getattr("foo", 5) == 5
+
+
+def test_module_getattr_error():
+    query = "{% set val = 1 %}"
+
+    module = JinjaPsycopg().from_string(query).make_module()
+    with pytest.raises(AttributeError):
+        module.getattr("foo")
+
+
 def test_module_static(conn: Connection):
     query = dedent(
         """\
