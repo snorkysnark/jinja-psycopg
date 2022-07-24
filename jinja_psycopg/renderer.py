@@ -27,6 +27,19 @@ def psycopg_filter(value: Any):
     return f"{{{key}}}"
 
 
+def escape_percents(composed: Composed) -> Composed:
+    """Replace all occurences of '%' with '%%',
+    so that psycopg doesn't mistake them for placeholders.
+    Actual placeholders can still be created with psycopg.sql.Placeholder"""
+    new_sequence = []
+    for token in composed:
+        if isinstance(token, SQL):
+            token = SQL(token.as_string(None).replace("%", "%%"))
+        new_sequence.append(token)
+
+    return Composed(new_sequence)
+
+
 class SqlTemplate:
     """Wrapper for jinja2.Template that stores static format arguments
     such as `{{ 'text' }}`"""
@@ -42,7 +55,8 @@ class SqlTemplate:
             sql = SQL(self._template.render(*args, **kwargs))
         dynamic_args = recorder.unwrap()
 
-        return sql.format(**self._static_args, **dynamic_args)
+        composed = sql.format(**self._static_args, **dynamic_args)
+        return escape_percents(composed)
 
     def make_module(
         self,
@@ -69,7 +83,8 @@ class SqlTemplateModule:
 
     def render(self):
         """Returns a formatted SQL statement"""
-        return SQL(str(self._module)).format(**self._args)
+        composed = SQL(str(self._module)).format(**self._args)
+        return escape_percents(composed)
 
     @property
     def inner(self):

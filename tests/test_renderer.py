@@ -275,3 +275,21 @@ def test_join_attribute(conn: Connection):
     params = {"columns": [Column("id", "SERIAL PRIMARY KEY"), Column("name", "TEXT")]}
 
     assert JinjaPsycopg().render(query, params).as_string(conn) == expected
+
+
+def test_escape_percent(conn: Connection):
+    query = dedent(
+        """\
+        SELECT * FROM foo
+        WHERE field1 LIKE '%'
+        AND field2 = {{ field2 }}"""
+    )
+    expected = dedent(
+        """\
+        SELECT * FROM foo
+        WHERE field1 LIKE '%%'
+        AND field2 = %(field2)s"""
+    )
+    params = {"field2": sql.Placeholder("field2")}
+
+    assert JinjaPsycopg().render(query, params).as_string(conn) == expected
