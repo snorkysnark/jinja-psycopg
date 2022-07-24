@@ -2,5 +2,7 @@
 __pypackages__/
 .pdm.toml
 
+dist/
+
 *.ipynb
 .ipynb_checkpoints/
