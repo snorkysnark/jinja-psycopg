@@ -75,7 +75,7 @@ class SqlTemplateModule:
     def inner(self):
         return self._module
 
-    def getattr(self, name: str, default: Any = _NO_VALUE):
+    def getattr(self, name: str, default: Any = _NO_VALUE) -> Any:
         """Get attribute of the inner module"""
         if default is _NO_VALUE:
             return getattr(self._module, name)
