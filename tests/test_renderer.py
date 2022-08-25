@@ -110,19 +110,16 @@ def test_if(conn: Connection, flag: bool, expected: str):
 
 
 def test_for(conn: Connection):
-    query = dedent(
-        """\
+    query = """\
         {% for column in columns -%}
         ADD COLUMN {{ column }} TEXT{% if not loop.last %},
-        {% endif %}{% endfor %}\
-        """
-    )
+        {% endif %}{% endfor %}"""
+
     expected = dedent(
         """\
         ADD COLUMN "id" TEXT,
         ADD COLUMN "source" TEXT,
-        ADD COLUMN "html" TEXT\
-        """
+        ADD COLUMN "html" TEXT"""
     )
     params = {
         "columns": [
@@ -136,19 +133,16 @@ def test_for(conn: Connection):
 
 
 def test_for_static(conn: Connection):
-    query = dedent(
-        """\
+    query = """\
         {% for ident in idents -%}
         {{ 'text' }} {{ ident }}{% if not loop.last %},
-        {% endif %}{% endfor %}\
-        """
-    )
+        {% endif %}{% endfor %}"""
+
     expected = dedent(
         """\
         'text' "foo",
         'text' "bar",
-        'text' "fluff"\
-        """
+        'text' "fluff\""""
     )
     params = {
         "idents": [
@@ -162,11 +156,10 @@ def test_for_static(conn: Connection):
 
 
 def test_module(conn: Connection):
-    query = dedent(
-        """\
+    query = """\
         {% set val = 1 -%}
         SELECT * FROM {{ table }}"""
-    )
+
     expected = 'SELECT * FROM "sources"'
     params = {"table": sql.Identifier("sources")}
 
@@ -200,11 +193,10 @@ def test_module_getattr_error():
 
 
 def test_module_static(conn: Connection):
-    query = dedent(
-        """\
+    query = """\
         {% set val = 1 -%}
         {{ 'text' }} {{ table }}"""
-    )
+
     expected = "'text' \"sources\""
     params = {"table": sql.Identifier("sources")}
 
@@ -278,12 +270,11 @@ def test_join_attribute(conn: Connection):
 
 
 def test_escape_percent(conn: Connection):
-    query = dedent(
-        """\
+    query = """\
         SELECT * FROM foo
         WHERE field1 LIKE '%'
         AND field2 = {{ field2 }}"""
-    )
+
     expected = dedent(
         """\
         SELECT * FROM foo

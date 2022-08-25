@@ -1,3 +1,4 @@
+import textwrap
 from typing import Any, Mapping, Optional, Union
 
 from jinja2 import Environment, Template
@@ -111,10 +112,17 @@ class JinjaPsycopg:
         self._env.filters["sql"] = sql_filter
         self._env.filters["sqljoin"] = sql_join_filter
 
-    def from_string(self, source: str) -> SqlTemplate:
+    def from_string(
+        self, source: str, dedent: bool = True, strip: bool = True
+    ) -> SqlTemplate:
         # Jinja2 processes its blocks in two iterations:
         # static values like {{ 'text' }} are processed during from_string,
         # and dynamic ones during Template.render or make_module
+        if dedent:
+            source = textwrap.dedent(source)
+        if strip:
+            source = source.strip()
+
         recorder = CONTEXT.recorder("static")
         with recorder:
             template = self._env.from_string(source)
@@ -122,9 +130,13 @@ class JinjaPsycopg:
         return SqlTemplate(template, recorder.unwrap())
 
     def render(
-        self, template: Union[str, SqlTemplate], params: dict[str, Any] = {}
+        self,
+        template: Union[str, SqlTemplate],
+        params: dict[str, Any] = {},
+        dedent: bool = True,
+        strip: bool = True,
     ) -> Composed:
         if isinstance(template, str):
-            template = self.from_string(template)
+            template = self.from_string(template, dedent=dedent, strip=strip)
 
         return template.render(params)
