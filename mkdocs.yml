@@ -29,7 +29,7 @@ plugins:
         python:
           options:
             merge_init_into_class: true
-            show_source: false
+            show_source: true
             members_order: source
             docstring_section_style: list
           import:
