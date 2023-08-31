@@ -1,1 +1,5 @@
-from .renderer import JinjaPsycopg, SqlTemplate, SqlTemplateModule
+from .renderer import (
+    JinjaPsycopg as JinjaPsycopg,
+    SqlTemplate as SqlTemplate,
+    SqlTemplateModule as SqlTemplateModule,
+)
