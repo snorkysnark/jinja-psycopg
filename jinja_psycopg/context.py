@@ -1,42 +1,65 @@
+from __future__ import annotations
 from contextvars import ContextVar
-from dataclasses import dataclass, field
 from typing import Optional, Any
 
 
-@dataclass
 class FormatArgs:
-    """Data structure for recording values in jinja blocks to be formatted by psycopg
-    Args:
-        - prefix (str): Prefix used in dictionary keys"""
+    def __init__(self, prefix: str) -> None:
+        """Data structure for recording values in jinja blocks to be formatted by psycopg
 
-    prefix: str
-    dictionary: dict[str, Any] = field(default_factory=dict)
-    num_values: int = 0
+        Args:
+            prefix: Prefix used in dictionary keys
+        """
+
+        self._prefix = prefix
+        self._dictionary = {}
+        self._num_values = 0
 
     def save_value(self, value: Any) -> str:
-        """Saves the value to dictionary, returning its key
-        in the format of `prefix#number`"""
-        key = f"{self.prefix}#{self.num_values}"
-        self.dictionary[key] = value
+        """
+        Args:
+            value: value to save
 
-        self.num_values += 1
+        Returns:
+            generated key in the format of `prefix#number`
+        """
+        key = f"{self._prefix}#{self._num_values}"
+        self._dictionary[key] = value
+
+        self._num_values += 1
         return key
+
+    @property
+    def dictionary(self) -> dict:
+        """
+        Returns:
+            saved values
+        """
+        return self._dictionary
 
 
 class FormatArgsContext:
-    """Wrapper for ContextVar used for saving format args from within `psycopg` filter
-    and for creating argument recorders"""
-
     def __init__(self, name: str) -> None:
-        """Args:
-        - name (str): name used by the ContextVar"""
+        """Wrapper for [contextvars.ContextVar][] used for saving format args from within
+            [`psycopg`][jinja_psycopg.renderer.psycopg_filter] filter and for creating argument recorders
+
+        Args:
+            name: name used by the ContextVar
+        """
         self._context_var = ContextVar[Optional[FormatArgs]](name, default=None)
 
     def save_value(self, value: Any) -> str:
-        """Saves the value to dictionary, returning its key
-        in the format of `prefix#number`.
+        """
+        Args:
+            value: value to save
 
-        Errors if ContextVar is empty"""
+        Returns:
+            generated key in the format of `prefix#number`
+
+        Raises:
+            RuntimeError: if ContextVar was empty
+        """
+
         context = self._context_var.get()
         if context is None:
             raise RuntimeError(
@@ -45,19 +68,29 @@ class FormatArgsContext:
 
         return context.save_value(value)
 
-    def recorder(self, prefix: str):
-        """Args:
-        - prefix (str): Prefix for the keys in the resulting dictionary"""
+    def recorder(self, prefix: str) -> FormatArgsRecorder:
+        """
+        Args:
+            prefix: Prefix for the keys in the resulting dictionary
+
+        Returns:
+            new recorder with the given prefix
+        """
         return FormatArgsRecorder(self._context_var, prefix)
 
 
 class FormatArgsRecorder:
-    """ContextVar wrapper that works as a context manager
-    and records arguments saved within its scope into a dictionary"""
-
     def __init__(
         self, context_var: ContextVar[Optional[FormatArgs]], prefix: str
     ) -> None:
+        """[contextvars.ContextVar][] wrapper that works as a context manager
+        and records arguments saved within its scope into a dictionary
+
+        Args:
+            context_var: Inner ContextVar
+            prefix: Prefix used in dictionary keys
+        """
+
         self._context_var = context_var
         self._prefix = prefix
         self._recorded = None
@@ -74,7 +107,13 @@ class FormatArgsRecorder:
         self._context_var.reset(self._token)
 
     def unwrap(self) -> dict[str, Any]:
-        """Returs the recorded arguments, errors if nothing was recorder"""
+        """
+        Returns:
+            the recorded arguments
+
+        Raises:
+            RuntimeError: if nothing was recorded
+        """
         if self._recorded is None:
             raise RuntimeError(
                 "Called ContextDictRecorder.unwrap(), but nothing was recorded"

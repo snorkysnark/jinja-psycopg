@@ -28,15 +28,14 @@ plugins:
       handlers:
         python:
           options:
-            # show_root_heading: true
-            # show_root_full_path: false
-            # merge_init_into_class: true
-            # show_source: false
-            # members_order: source
+            merge_init_into_class: true
+            show_source: false
+            members_order: source
             docstring_section_style: list
           import:
             - https://docs.python.org/3/objects.inv
             - https://www.psycopg.org/psycopg3/docs/objects.inv
+            - https://jinja.palletsprojects.com/en/3.1.x/objects.inv
 
 nav:
   - Home: index.md

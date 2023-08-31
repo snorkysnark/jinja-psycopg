@@ -4,11 +4,12 @@ from jinja2.lexer import TokenStream, Token
 
 
 class PsycopgExtension(Extension):
-    """Wraps all expressions with the psycopg filter,
-    so
-    `{{ variable | filter1 | filter2 }}`
-    becomes
-    `{{ (variable | filter1 | filter2) | psycopg }}`
+    """Wraps all expressions with the [`psycopg`][jinja_psycopg.renderer.psycopg_filter] filter,
+
+    so `{{ variable | filter1 | filter2 }}`
+
+    becomes `{{ (variable | filter1 | filter2) | psycopg }}`
+
     Inspired by [jinjasql](https://github.com/sripathikrishnan/jinjasql)
     """
 
