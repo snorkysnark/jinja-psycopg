@@ -36,6 +36,7 @@ plugins:
             - https://docs.python.org/3/objects.inv
             - https://www.psycopg.org/psycopg3/docs/objects.inv
             - https://jinja.palletsprojects.com/en/3.1.x/objects.inv
+  - include-markdown
 
 nav:
   - Home: index.md

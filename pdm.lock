@@ -6,7 +6,7 @@ groups = ["default", "dev"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:19c6d60365b1b4ed326a086e4af23dff20d130a3a6fd794554c66102755144cf"
+content_hash = "sha256:a5116cec41bef4aec11a58180c8327fef9a75b27343b4595fdb9a53d1181359f"
 
 [[package]]
 name = "atomicwrites"
@@ -389,6 +389,16 @@ dependencies = [
 files = [
     {file = "mkdocs_gen_files-0.5.0-py3-none-any.whl", hash = "sha256:7ac060096f3f40bd19039e7277dd3050be9a453c8ac578645844d4d91d7978ea"},
     {file = "mkdocs_gen_files-0.5.0.tar.gz", hash = "sha256:4c7cf256b5d67062a788f6b1d035e157fc1a9498c2399be9af5257d4ff4d19bc"},
+]
+
+[[package]]
+name = "mkdocs-include-markdown-plugin"
+version = "3.9.1"
+requires_python = ">=3.6"
+summary = "Mkdocs Markdown includer plugin."
+files = [
+    {file = "mkdocs_include_markdown_plugin-3.9.1-py3-none-any.whl", hash = "sha256:f33687e29ac66d045ba181ea50f054646b0090b42b0a4318f08e7f1d1235e6f6"},
+    {file = "mkdocs_include_markdown_plugin-3.9.1.tar.gz", hash = "sha256:5e5698e78d7fea111be9873a456089daa333497988405acaac8eba2924a19152"},
 ]
 
 [[package]]

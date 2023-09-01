@@ -1,118 +1,123 @@
-# Injection-safe SQL templating engine, Powered by Jinja+Psycopg
+# Jinja-Psycopg
 
-## Why [jinja](https://jinja.palletsprojects.com/en/3.1.x/) templates are not enough
+Jinja-Psycopg is a bridge between the [jinja](https://jinja.palletsprojects.com/en/3.1.x/) templating engine
+and psycopg3's [type-aware formatting](https://www.psycopg.org/psycopg3/docs/api/sql.html).
 
-```python
-env = Environment()
-template = env.from_string(
-    """
-    select * from {{ table }}
-    {% if name is not None %}
-    where name = {{ name }}
-    {% endif %}
-    """
-)
-template.render(
-    table="foo",
-    name="R'lyeh" # This will fail
-)
-```
+## Basic Usage
 
-Pros:
-- if blocks, loops, filters, custom code, etc
-
-Cons:
-- just a string templating engine, doesn't do any escaping
-
-## Psycopg's built-in string composition
-
-Similarly, [psycopg3](https://www.psycopg.org/psycopg3/docs/api/sql.html)
-has its own way of building queries, based on python's string formatting syntax
-
-```python
-composed = SQL(
-    """
-    select * from {table}
-    where name = {name}
-    """
-).format(table=Identifier("foo"), name="R'lyeh")
-
-with psycopg.connect() as conn:
-    # db connection is needed to actually render the query
-    query = composed.as_string(conn)
-```
-
-Pros:
-- Can differentiate between identifiers, literals and plain SQL
-- Native escaping using libpq
-
-Cons:
-- Limited templating functionality
-
-## JinjaPsycopg, best of both worlds
-
-```python
+```py
 from jinja_psycopg import JinjaPsycopg
 from psycopg.sql import Identifier
 
 query = """\
-select * from {{ table }}
-{% if name is not None %}
-where name = {{ name }}
-{% endif %}"""
+{% set sep = joiner('\nAND ') -%}
+
+SELECT * FROM {{ table }}
+WHERE
+{% for column, value in where %}
+{{- sep() | sql -}}
+{{ column }} = {{ value }}
+{%- endfor %};
+"""
 
 renderer = JinjaPsycopg()
-template = renderer.from_string(query)
-composed = template.render(table=Identifier("foo"), name="R'lyeh")
+renderer.render(
+    query,
+    {
+        "table": Identifier("people"),
+        "where": [
+            (Identifier("name"), "Simon"),
+            (Identifier("year"), 2015),
+            (Identifier("subject"), Placeholder("subject")),
+        ],
+    },
+)
+```
 
-with psycopg.connect() as conn, conn.cursor() as cursor:
+This script renders the following SQL.
+
+Strings will be automatically escaped,
+Identifiers quoted and Placeholders wrapped with the placeholder syntax
+
+```sql
+SELECT * FROM "people"
+WHERE
+"name" = 'Simon'
+AND "year" = 2015
+AND "subject" = %(subject)s;
+```
+
+## The Composed object
+
+Ok, that's not the whole story.
+
+The render() method returns a [psycopg.sql.Composed][],
+which needs to be turned into a string by the backend:
+
+```py
+psycopg.connect("dbame=test") as conn:
     # Render to string
-    query = composed.as_string(cursor)
-    # Execute
-    cursor.execute(composed)
-```
-or, as a shortcut:
-
-```python
-composed = renderer.render(query, { "table": Identifier("foo"), "name": "R'lyeh" })
+    print(composed.as_string(conn))
+     # Or execute directly
+    conn.execute(composed, {"subject": "Math"})
 ```
 
-[make_module](https://jinja.palletsprojects.com/en/3.1.x/api/?highlight=make_module#jinja2.Template.make_module)
-is also supported, allowing you to extract configuration values from your template
+## SqlTemplate and SqlTemplateModule
 
-```python
-sqlmodule = renderer.from_string(
-    """
+Like in jinja, you can save your templates
+
+```py linenums="1"
+template = renderer.from_string(
+    """\
     {% set config = { 'option': True } %}
-    select field from {{ table }}
-    """
-).make_module({ "table": Identifier("foo") })
+    select field from {{ table }};"""
+)
+```
 
+And turn them into python modules
+
+```py linenums="6"
+module = template.make_module({ "table": Identifier("foo") })
 assert getattr(sqlmodule.module, "config")['option'] == True
 
 # Render to SQL
 composed = sqlmodule.render()
 ```
 
-### Custom SQL Objects
+## Custom SQL Objects
 
-```python
+```py
 @dataclass
 class Table:
     schema: str
     name: str
 
     def __sql__(self):
-        return SQL("{}.{}").format(
-            Identifier(self.schema), Identifier(self.name)
-        )
+        return Identifier(self.name, self.schema)
 
-renderer.render("select * from {{ table }}", { "table": Table("public", "foo") })
+renderer.render(
+    "select * from {{ table }}",
+    {"table": Table("public", "foo")}
+)
 ```
 
-### Filters
+## Custom Environments
 
-#### psycopg
+To add your own global variables and filters
+to the jinja Environment, you can subclass JinjaPsycopg
+
+```py
+class CustomRenderer(JinjaPsycopg):
+    def _prepare_environment(self):
+        super()._prepare_environment()
+
+        self._env.globals["foo"] = my_global_variable
+        self._env.filters["bar"] = my_filter
+```
+
+## Filters
+
+### psycopg
 
 This filter is applied **automatically** to all jinja blocks:
 
@@ -122,13 +127,13 @@ It stores the actual value inside a ContextVar,
 replacing `{{value}}` with a placeholder like `{dictionary_key}`
 to later be passed to SQL.format
 
-#### sql
+### sql
 
 Treat a string value as plain SQL, not as a literal
 
 `ALTER TABLE foo {{ 'ADD COLUMN html TEXT' | sql }}`
 
-#### sqljoin
+### sqljoin
 
 Same as jinja's
 [join](https://jinja.palletsprojects.com/en/3.1.x/templates/?highlight=join#jinja-filters.join) filter,
