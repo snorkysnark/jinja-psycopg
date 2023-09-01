@@ -3,6 +3,7 @@ __pypackages__/
 .pdm-python
 
 dist/
+notebooks/
 
 *.ipynb
 .ipynb_checkpoints/
