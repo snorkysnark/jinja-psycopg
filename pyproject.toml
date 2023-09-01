@@ -1,9 +1,9 @@
 [project]
 name = "jinja-psycopg"
-version = "0.1.4"
+version = "0.1.5"
 description = "Bridge between the jinja templating engine and psycopg3's type-aware formatting"
 authors = [
-    {name = "snorkysnark", email = "snorkysnark@gmail.com"},
+    { name = "snorkysnark", email = "snorkysnark@gmail.com" },
 ]
 dependencies = [
     "jinja2>=3.1.2",
@@ -11,9 +11,14 @@ dependencies = [
 ]
 requires-python = ">=3.9"
 readme = "README.md"
-license = {text = "MIT"}
-[tool]
-[tool.pdm]
+
+[project.license]
+text = "MIT"
+
+[project.urls]
+Repository = "https://github.com/snorkysnark/jinja-psycopg/"
+Documentation = "https://snorkysnark.github.io/jinja-psycopg/"
+
 [tool.pdm.dev-dependencies]
 dev = [
     "pytest>=7.1.2",
@@ -25,9 +30,7 @@ dev = [
 ]
 
 [build-system]
-requires = ["pdm-pep517>=0.12.0"]
+requires = [
+    "pdm-pep517>=0.12.0",
+]
 build-backend = "pdm.pep517.api"
-
-[project.urls]
-Repository = "https://github.com/snorkysnark/jinja-psycopg/"
-Documentation = "https://snorkysnark.github.io/jinja-psycopg/"
