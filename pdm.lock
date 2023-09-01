@@ -6,7 +6,7 @@ groups = ["default", "dev"]
 cross_platform = true
 static_urls = false
 lock_version = "4.3"
-content_hash = "sha256:a5116cec41bef4aec11a58180c8327fef9a75b27343b4595fdb9a53d1181359f"
+content_hash = "sha256:f6ddd59dab27ad512fa883cbc55ac38fb27e2c7660a08697102b79acd369b679"
 
 [[package]]
 name = "atomicwrites"

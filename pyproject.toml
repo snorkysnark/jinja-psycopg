@@ -8,7 +8,6 @@ authors = [
 dependencies = [
     "jinja2>=3.1.2",
     "psycopg>=3.0.15",
-    "mkdocs-include-markdown-plugin>=3.9.1",
 ]
 requires-python = ">=3.9"
 readme = "README.md"
@@ -22,6 +21,7 @@ dev = [
     "mkdocs-material>=9.2.6",
     "mkdocs-gen-files>=0.5.0",
     "mkdocs-literate-nav>=0.6.0",
+    "mkdocs-include-markdown-plugin>=3.9.1",
 ]
 
 [build-system]
