@@ -42,6 +42,9 @@ nav:
   - Home: index.md
   - Code Reference: reference/
 
+repo_url: https://github.com/snorkysnark/jinja-psycopg
+repo_name: snorkysnark/jinja-psycopg
+
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
