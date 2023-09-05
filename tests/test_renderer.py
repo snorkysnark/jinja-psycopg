@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 from textwrap import dedent
 import pytest
@@ -9,7 +10,7 @@ from jinja_psycopg import JinjaPsycopg
 
 @pytest.fixture
 def conn():
-    connection = psycopg.connect()
+    connection = psycopg.connect(os.environ.get("POSTGRES_URL", ""))
     yield connection
     connection.close()
 
