@@ -4,6 +4,7 @@ __pypackages__/
 
 dist/
 notebooks/
+site/
 
 *.ipynb
 .ipynb_checkpoints/
