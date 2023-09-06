@@ -3,9 +3,9 @@
 Jinja-Psycopg is a bridge between the [jinja](https://jinja.palletsprojects.com/en/3.1.x/) templating engine
 and psycopg3's [type-aware formatting](https://www.psycopg.org/psycopg3/docs/api/sql.html).
 
-[![PyPI - Version](https://img.shields.io/pypi/v/jinja-psycopg?style=for-the-badge&color=009a5c)](https://pypi.org/project/jinja-psycopg/)
-[![Docs - Status](https://img.shields.io/github/actions/workflow/status/snorkysnark/jinja-psycopg/publish-docs.yml?style=for-the-badge&label=docs&color=009a5c)](https://snorkysnark.github.io/jinja-psycopg/)
-![Tests - Status](https://img.shields.io/github/actions/workflow/status/snorkysnark/jinja-psycopg/run-tests.yml?style=for-the-badge&label=tests&color=009a5c)
+[![PyPI - Version](https://img.shields.io/pypi/v/jinja-psycopg?style=for-the-badge)](https://pypi.org/project/jinja-psycopg/)
+[![Docs - Status](https://img.shields.io/github/actions/workflow/status/snorkysnark/jinja-psycopg/publish-docs.yml?style=for-the-badge&label=docs)](https://snorkysnark.github.io/jinja-psycopg/)
+![Tests - Status](https://img.shields.io/github/actions/workflow/status/snorkysnark/jinja-psycopg/run-tests.yml?style=for-the-badge&label=tests)
 
 ## Basic Usage
 
