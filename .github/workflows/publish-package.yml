@@ -1,0 +1,49 @@
+name: publish-package
+
+on:
+  workflow_dispatch:
+    inputs:
+      testpypi:
+        description: Publish to TestPyPi, not PyPi
+        required: true
+        default: true
+        type: boolean
+      version:
+        description: Version
+        type: string
+        required: true
+  workflow_call:
+    inputs:
+      testpypi:
+        default: false
+        type: boolean
+      version:
+        type: string
+        required: true
+
+jobs:
+  publish-package:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v3
+        with:
+          python-version: 3.11
+          update-python: true
+          cache: true
+
+      - name: Install toml-cli
+        run: pip install toml-cli
+      - name: Set package version to ${{ inputs.version || github.ref_name }}
+        run: toml set --toml-path pyproject.toml project.version ${{ inputs.version || github.ref_name }}
+
+      - if: "!inputs.testpypi"
+        name: Publish package distributions to PyPI
+        run: pdm publish
+      - if: inputs.testpypi
+        name: Publish package distributions to TestPyPI
+        run: pdm publish --repository testpypi

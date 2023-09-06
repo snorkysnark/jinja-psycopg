@@ -1,6 +1,6 @@
 [project]
 name = "jinja-psycopg"
-version = "0.1.5"
+version = "0.0.0"
 description = "Bridge between the jinja templating engine and psycopg3's type-aware formatting"
 authors = [
     { name = "snorkysnark", email = "snorkysnark@gmail.com" },

@@ -1,0 +1,29 @@
+name: publish
+
+on:
+  push:
+    tags: "*"
+  workflow_dispatch:
+    inputs:
+      testpypi:
+        description: Publish to TestPyPi, not PyPi
+        required: true
+        default: true
+        type: boolean
+      version:
+        description: Version
+        type: string
+        required: true
+
+jobs:
+  run-tests:
+    uses: ./.github/workflows/run-tests.yml
+  publish-docs:
+    needs: run-tests
+    uses: ./.github/workflows/publish-docs.yml
+  publish-package:
+    needs: run-tests
+    uses: ./.github/workflows/publish-package.yml
+    with:
+      testpypi: ${{ github.event == 'workflow_dispatch' && inputs.testpypi }}
+      version: ${{ github.event == 'push' && github.ref_name || inputs.version }}
